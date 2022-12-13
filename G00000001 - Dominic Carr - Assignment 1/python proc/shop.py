@@ -56,7 +56,7 @@ def buy_items(customer, shop):
     instock = 1
     cost = 0
     error = 0
-
+    x = 0
     for item in customer.shopping_list:  
 
         for i in shop.stock:
@@ -66,6 +66,7 @@ def buy_items(customer, shop):
 
                 if item.quantity <= i.quantity:
                     cost += item.quantity * i.product.price
+                    shop.stock[x].quantity = shop.stock[x].quantity - item.quantity
 
                 else:
                     print(f"{item.product.name} NOT ENOUGH IN STOCK.")
@@ -76,6 +77,7 @@ def buy_items(customer, shop):
 
             else:
                 instock = 0
+            x+=1
 
         if instock == 0:
             print(f"{item.product.name} IS NOT IN THIS SHOP.")  
@@ -89,12 +91,24 @@ def buy_items(customer, shop):
         
     if error == 1:
         print('INVALID PURCHASE')
-        return customer.budget, shop.cash
+        return customer, shop
     else:
-        shop_funds = shop.cash + cost
-        customer_funds = round(customer.budget - cost,2)
+        shop.cash = round(shop.cash + cost, 2)
+        customer.budget = round(customer.budget - cost,2)
+        print("SUCCESSFUL PURCHASE")
         print(f'COST: {cost}')
-        return customer_funds, shop_funds
+        return customer, shop
+
+def update_shop(s):
+        new_list = list()
+        new_list.append([s.cash])
+        for item in s.stock:
+            new_list.append([item.product.name, item.product.price, item.quantity])
+
+        new_shop = open('..\stock.csv', 'w', newline = '')
+        csv_writer = csv.writer(new_shop)
+        csv_writer.writerows(new_list)
+        new_shop.close()
 
 def print_product(p):
     print(f'\nPRODUCT NAME: {p.name} \nPRODUCT PRICE: {p.price}')
@@ -122,9 +136,9 @@ s = create_and_stock_shop()
 while True:
 
     print(section)
-    print("1) Show Shop. \n2) Show Customer Shopping List.\n3) Add to Shopping List\n4) Buy Items.")
+    print("WELCOME", c.name, "\n1) Show Shop. \n2) Show Customer Shopping List.\n3) Buy Specific Item.\n4) Buy Items.\n5) Select Customer.\n6) Exit")
 
-    choice = input("ENTER NUMBER FOR OPTION(5 to exit): ")
+    choice = input("ENTER NUMBER FOR OPTION: ")
 
     choice = choice.strip()
 
@@ -138,26 +152,29 @@ while True:
 
     elif (choice == '3'):
         print(section)
-        p = input('Product Name: ')
-        quant = input('Quantity: ')
+        p = Product(input('Product Name: '))
+        quant = int(input('Quantity: '))
         ps = ProductStock(p, quant)
         c2 = c
         c2.shopping_list = []
         c2.shopping_list.append(ps)
         buy_items(c2, s)
+        update_shop(s)
 
     elif (choice == '4'):
         print(section)
-        customer_funds, shop_funds = buy_items(c, s)
-        print(shop_funds)
+        c, s = buy_items(c, s)
+        print(s.cash)
+        update_shop(s)
+
 
     elif (choice == '5'):
+        print(section)
         print('1) John(Succesful Purchase)(DEFAULT)')
         print('2) Cantof(Insufficient Funds)')
         print('3) Mrs400Loaves (Insufficient Stock)')
         read_c = input('Input Number of Which Customer you Wish to be: ')
         if (read_c == '1'):
-            print(section)
             c = read_customer("../customer.csv")
         elif (read_c == '2'):
              c = read_customer("../MrCantofCoke.csv")
