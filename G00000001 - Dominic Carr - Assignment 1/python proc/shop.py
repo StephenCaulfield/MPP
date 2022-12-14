@@ -52,7 +52,7 @@ def read_customer(file_path):
             c.shopping_list.append(ps)
         return c 
 
-def buy_items(customer, shop):
+def buy_items(customer, shop, single):
     instock = 1
     cost = 0
     error = 0
@@ -97,6 +97,8 @@ def buy_items(customer, shop):
         customer.budget = round(customer.budget - cost,2)
         print("SUCCESSFUL PURCHASE")
         print(f'COST: {cost}')
+        if single != 1:
+            customer.shopping_list = []
         return customer, shop
 
 def update_shop(s):
@@ -109,6 +111,24 @@ def update_shop(s):
         csv_writer = csv.writer(new_shop)
         csv_writer.writerows(new_list)
         new_shop.close()
+
+def update_customer(c, file):
+    new_list = list()
+    new_list.append([c.name, c.budget])
+    for item in c.shopping_list:
+        new_list.append([item.product.name, item.quantity])
+
+    new_customer = open(file, 'w', newline = '')
+    csv_writer = csv.writer(new_customer)
+    csv_writer.writerows(new_list)
+    new_customer.close()
+
+def add_to_list(c):
+        p = Product(input('Product Name: '))
+        quant = int(input('Quantity: '))
+        c.shopping_list.append([ProductStock(p, quant)])
+        return c
+    
 
 def print_product(p):
     print(f'\nPRODUCT NAME: {p.name} \nPRODUCT PRICE: {p.price}')
@@ -129,7 +149,9 @@ def print_shop(s):
         print_product(item.product)
         print(f'The Shop has {item.quantity} of the above')
 
-c = read_customer("../customer.csv")
+file = "../customer.csv"
+
+c = read_customer(file)
 
 s = create_and_stock_shop()
 
@@ -158,14 +180,15 @@ while True:
         c2 = c
         c2.shopping_list = []
         c2.shopping_list.append(ps)
-        buy_items(c2, s)
+        buy_items(c2, s, 0)
         update_shop(s)
 
     elif (choice == '4'):
         print(section)
-        c, s = buy_items(c, s)
+        c, s = buy_items(c, s, 0)
         print(s.cash)
         update_shop(s)
+        update_customer(c, file)
 
 
     elif (choice == '5'):
@@ -173,15 +196,22 @@ while True:
         print('1) John(Succesful Purchase)(DEFAULT)')
         print('2) Cantof(Insufficient Funds)')
         print('3) Mrs400Loaves (Insufficient Stock)')
+
         read_c = input('Input Number of Which Customer you Wish to be: ')
         if (read_c == '1'):
-            c = read_customer("../customer.csv")
+            file = "../customer.csv"
         elif (read_c == '2'):
-             c = read_customer("../MrCantofCoke.csv")
+            file = "../MrCantofCoke.csv"
         elif (read_c == '3'):
-             c = read_customer("../Mrs400loaves.csv")
+            file = "../Mrs400loaves.csv"
 
+        c = read_customer(file)
+    
     elif (choice == '6'):
+        add_to_list(c)
+        update_customer(c, file)
+
+    elif (choice == '7'):
         print(section)
         break
 
