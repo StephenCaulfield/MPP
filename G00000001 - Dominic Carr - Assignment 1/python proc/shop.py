@@ -81,6 +81,7 @@ def buy_items(customer, shop, single):
 
         if instock == 0:
             print(f"{item.product.name} IS NOT IN THIS SHOP.")  
+            printf("\ntest");
             error = 1
 
     cost = round(cost, 2)

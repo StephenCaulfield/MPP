@@ -25,6 +25,11 @@ struct Customer {
 	int index;
 };
 
+struct Shop_Cust {
+	struct Shop shop;
+	struct Customer cust;
+};
+
 void printProduct(struct Product p)
 {
 	printf("PRODUCT NAME: %s \nPRODUCT PRICE: %.2f\n", p.name, p.price);
@@ -132,6 +137,45 @@ void printShop(struct Shop s)
 	}
 }
 
+struct Shop_Cust buyitem(struct Customer customer, struct Shop shop, int single)
+{
+	int instock = 1;	
+	int inshop = 1;
+	int cost = 0;
+	int error = 0;
+	int x = 0;
+
+	for(int item = 0; item < customer.index; item++){
+		for(int i = 0; i < shop.index; i++){
+			if(*customer.shoppingList[item].product.name == *shop.stock[i].product.name){
+				printf("yay");
+				if (customer.shoppingList[item].quantity <= shop.stock[i].quantity){
+					break;
+				}
+				else if(instock != 0){
+					instock = 0;
+					printf("%s NOT ENOUGH IN STOCK.\n", customer.shoppingList[item].product.name);
+					break;
+				}
+			}
+			else{
+				inshop = 0;
+				break;
+			}
+
+		}			
+		if (inshop == 0){
+			printf("%s IS NOT IN THIS SHOP.\n", customer.shoppingList[item].product.name);	
+		}
+
+	}
+	if(instock == 1 && inshop == 1){
+	printf("SUCCESSFUL PURCHASE\n");
+	}
+	struct Shop_Cust shop_cust = {shop, customer};
+	return shop_cust;
+}
+
 int main(void) 
 {
 	char section[] = "========================================================================================\n";
@@ -164,7 +208,7 @@ int main(void)
 		else if (choice == '4')
 		{
 			printf(section);
-			break;
+			struct Shop_Cust shop_cust = buyitem(c, shop, 0);
 		}
 		else if (choice == '5')
 		{
