@@ -32,7 +32,7 @@ struct Shop_Cust {
 
 void printProduct(struct Product p)
 {
-	printf("PRODUCT NAME: %s \nPRODUCT PRICE: %.2f\n", p.name, p.price);
+	printf("PRODUCT NAME: %s \nPRODUCT PRICE: %lf\n", p.name, p.price);
 	printf("-------------\n");
 }
 
@@ -49,47 +49,7 @@ void printCustomer(struct Customer c)
 	}
 }
 
-struct Customer readCustomer(const char* file){
-	FILE * fp;
-    char * line = NULL;
-    size_t len = 0;
-    ssize_t read;
 
-    fp = fopen(file, "r");
-    if (fp == NULL)
-        exit(EXIT_FAILURE);
-
-	if (fp == NULL)
-        {
-		struct Customer list = {};
-        return list;
-		}
-	else
-		{
-		read = getline(&line, &len, fp);
-		char *cn = strtok(line, ",");
-		char *cname = malloc(sizeof(char) * 50);
-		strcpy(cname, cn);
-
-		float budget = atof(strtok(NULL, ","));
-		
-		struct Customer list = { cname, budget };
-
-		while ((read = getline(&line, &len, fp)) != -1) {
-			char *n = strtok(line, ",");
-			char *q = strtok(NULL, ",");
-			int quant = atoi(q);
-
-			char *p = malloc(sizeof(char) * 50);
-			strcpy(p, n);
-			struct Product product = {p};
-			struct ProductStock ps = {product, quant};
-			list.shoppingList[list.index++] = ps;
-
-		}
-		return list;
-	}
-}
 
 struct Shop createAndStockShop()
 {
@@ -141,15 +101,20 @@ struct Shop_Cust buyitem(struct Customer customer, struct Shop shop, int single)
 {
 	int instock = 1;	
 	int inshop = 1;
-	int cost = 0;
+	float cost = 0;
 	int error = 0;
 	int x = 0;
+	struct Shop_Cust shop_cust = {shop, customer};
+	struct Customer temp;
+	temp.name = customer.name;
+
 
 	for(int item = 0; item < customer.index; item++){
 		for(int i = 0; i < shop.index; i++){
 			if(*customer.shoppingList[item].product.name == *shop.stock[i].product.name){
-				printf("yay");
+				inshop = 1;
 				if (customer.shoppingList[item].quantity <= shop.stock[i].quantity){
+					cost = customer.shoppingList[item].quantity * shop.stock[i].product.price;
 					break;
 				}
 				else if(instock != 0){
@@ -160,7 +125,6 @@ struct Shop_Cust buyitem(struct Customer customer, struct Shop shop, int single)
 			}
 			else{
 				inshop = 0;
-				break;
 			}
 
 		}			
@@ -168,20 +132,100 @@ struct Shop_Cust buyitem(struct Customer customer, struct Shop shop, int single)
 			printf("%s IS NOT IN THIS SHOP.\n", customer.shoppingList[item].product.name);	
 		}
 
+
 	}
-	if(instock == 1 && inshop == 1){
+	if(cost > customer.budget)
+	{
+		printf("INSUFFICIENT FUNDS\n");
+	}
+
+	else if(instock == 1 && inshop == 1){
 	printf("SUCCESSFUL PURCHASE\n");
+	customer.budget = customer.budget - cost;
+	temp.budget = customer.budget;
+	shop.cash = shop.cash - cost;
+	customer = temp;
+	shop_cust.shop = shop;
+	shop_cust.cust = customer;
 	}
-	struct Shop_Cust shop_cust = {shop, customer};
 	return shop_cust;
+}
+struct Customer readCustomer(const char* file, struct Shop shop){
+	FILE * fp;
+    char * line = NULL;
+    size_t len = 0;
+    ssize_t read;
+
+    fp = fopen(file, "r");
+    if (fp == NULL)
+        exit(EXIT_FAILURE);
+
+	if (fp == NULL)
+        {
+		struct Customer list = {};
+        return list;
+		}
+	else
+		{
+		read = getline(&line, &len, fp);
+		char *cn = strtok(line, ",");
+		char *name = malloc(sizeof(char) * 50);
+		strcpy(name, cn);
+
+		float budget = atof(strtok(NULL, ","));
+		
+		struct Customer list = { name, budget };
+
+		while ((read = getline(&line, &len, fp)) != -1) {
+			char *n = strtok(line, ",");
+			char *q = strtok(NULL, ",");
+			int quant = atoi(q);
+			double price = 0;
+			char *p = malloc(sizeof(char) * 50);
+			strcpy(p, n);			
+			struct Product product = {p};
+			for(int i =0 ; i < shop.index; i++)
+			{
+				printf("%s", product.name);
+				if(*shop.stock[i].product.name == *product.name)
+				{
+					printf("yay");
+					price = shop.stock[i].product.price;
+					break;
+				}
+			}
+			product.price = price;
+			struct ProductStock ps = {product, quant};
+			list.shoppingList[list.index++] = ps;
+
+		}
+		return list;
+	}
+}
+
+void updateCustomerfile(struct Customer customer, char* file){
+	FILE *fpt;
+	fpt = fopen(file, "w");
+	fprintf(fpt,"%s, %f", customer.name, customer.budget);
+	for(int i = 0; i < customer.index; i++){
+		fprintf(fpt, "%s, %d", customer.shoppingList[i].product.name, customer.shoppingList[i].quantity);
+	}
+}
+void updateShopfile(struct Shop shop){
+	FILE *fpt;
+	fpt = fopen("../stock.csv", "w");
+	fprintf(fpt, "%f",  shop.cash);
+	for(int i = 0; i < shop.index; i++){
+		fprintf(fpt, "%s, %f, %d", shop.stock[i].product.name, shop.stock[i].product.price, shop.stock[i].quantity);
+	}
 }
 
 int main(void) 
 {
-	char section[] = "========================================================================================\n";
+	char section[] = "\n========================================================================================\n";
 	struct Shop shop = createAndStockShop();
 	char *file = "../customer.csv";
-	struct Customer c = readCustomer(file);
+	struct Customer c = readCustomer(file, shop);
 	char choice;
 	while(1){
 		choice = '0';
@@ -209,6 +253,10 @@ int main(void)
 		{
 			printf(section);
 			struct Shop_Cust shop_cust = buyitem(c, shop, 0);
+			c = shop_cust.cust;
+			shop = shop_cust.shop;
+			updateCustomerfile(c, file);
+			updateShopfile(shop);
 		}
 		else if (choice == '5')
 		{
@@ -227,12 +275,22 @@ int main(void)
         	else if (choice == '3'){
             	file = "../Mrs400loaves.csv";
 			}
-		c = readCustomer(file);
+		c = readCustomer(file, shop);
 		}
 		else if (choice == '6')
 		{
+			char name[20];
+			int quant;
 			printf(section);
-			break;
+			printf(" \nProduct Name:\n");
+			scanf("%s", &name);
+			printf(" \nQuantity:\n ");
+			scanf("%d", &quant);
+			for(int i=c.index-1; i>=c.index-1; i--){
+   				 c.shoppingList[i+1]= c.shoppingList[i];
+  				 c.shoppingList[c.index-1].product.name = name;
+				 c.shoppingList[c.index-1].quantity = quant;
+			}
 		}
 		else if (choice == '7')
 		{
