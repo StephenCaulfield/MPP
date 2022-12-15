@@ -126,7 +126,8 @@ def update_customer(c, file):
 def add_to_list(c):
         p = Product(input('Product Name: '))
         quant = int(input('Quantity: '))
-        c.shopping_list.append([ProductStock(p, quant)])
+        ps = ProductStock(p, quant)
+        c.shopping_list.append(ps)
         return c
     
 
@@ -158,7 +159,7 @@ s = create_and_stock_shop()
 while True:
 
     print(section)
-    print("WELCOME", c.name, "\n1) Show Shop. \n2) Show Customer Shopping List.\n3) Buy Specific Item.\n4) Buy Items.\n5) Select Customer.\n6) Exit")
+    print("WELCOME", c.name, "\n1) Show Shop. \n2) Show Customer Shopping List.\n3) Buy Specific Item.\n4) Buy Items. \n5) Select Customer.\n6) Add to Shopping List. \n7) Exit")
 
     choice = input("ENTER NUMBER FOR OPTION: ")
 
