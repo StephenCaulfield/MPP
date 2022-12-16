@@ -150,6 +150,24 @@ struct Shop_Cust buyitem(struct Customer customer, struct Shop shop, int single)
 	}
 	return shop_cust;
 }
+
+struct ProductStock createProduct(char *p, int quant, struct Shop shop){
+			double price = 0;
+			struct Product product = {p};
+			for(int i =0 ; i < shop.index; i++)
+			{
+				if(*shop.stock[i].product.name == *product.name)
+				{
+					price = shop.stock[i].product.price;
+					break;
+				}
+			}
+			product.price = price;
+			struct ProductStock ps = {product, quant};
+			return ps;
+
+}
+
 struct Customer readCustomer(const char* file, struct Shop shop){
 	FILE * fp;
     char * line = NULL;
@@ -180,28 +198,19 @@ struct Customer readCustomer(const char* file, struct Shop shop){
 			char *n = strtok(line, ",");
 			char *q = strtok(NULL, ",");
 			int quant = atoi(q);
-			double price = 0;
+			
 			char *p = malloc(sizeof(char) * 50);
 			strcpy(p, n);			
-			struct Product product = {p};
-			for(int i =0 ; i < shop.index; i++)
-			{
-				printf("%s", product.name);
-				if(*shop.stock[i].product.name == *product.name)
-				{
-					printf("yay");
-					price = shop.stock[i].product.price;
-					break;
-				}
-			}
-			product.price = price;
-			struct ProductStock ps = {product, quant};
+			struct ProductStock ps = createProduct(p, quant, shop);
+			
 			list.shoppingList[list.index++] = ps;
 
 		}
 		return list;
 	}
 }
+
+
 
 void updateCustomerfile(struct Customer customer, char* file){
 	FILE *fpt;
@@ -280,16 +289,25 @@ int main(void)
 		else if (choice == '6')
 		{
 			char name[20];
+			char str[30];
 			int quant;
-			printf(section);
-			printf(" \nProduct Name:\n");
-			scanf("%s", &name);
-			printf(" \nQuantity:\n ");
+			printf(section);			
+			printf(" \nProduct Name:");
+			scanf(" %[^\n]", &name);		
+			printf(" \nQuantity: ");
 			scanf("%d", &quant);
-			for(int i=c.index-1; i>=c.index-1; i--){
-   				 c.shoppingList[i+1]= c.shoppingList[i];
-  				 c.shoppingList[c.index-1].product.name = name;
-				 c.shoppingList[c.index-1].quantity = quant;
+			char q = atoc(quant);
+			char p[30] = name + "," + q;
+			strncat(str, name, 1);
+			strncat(str, ",", 1);
+			strncat(str, q, 1);
+
+
+			for(int i=0; i>=c.index+1; i++){
+				
+	
+				createProduct(name, shop)
+				
 			}
 		}
 		else if (choice == '7')
